@@ -499,7 +499,10 @@ function clearHistory(){if(confirm('确定要清空成绩记录吗？')){state.h
 render();
 
 
-// ===== AI 智能考情分析（智谱 GLM-4.5-Flash，通过 Netlify Function 调用，Key 不暴露到前端） =====
+// ===== AI 智能考情分析（智谱 GLM-4.5-Flash，浏览器直接调用） =====
+// 说明：GitHub Pages 为纯静态托管，无服务端函数，故 Key 内嵌于前端。
+var ZHIPU_API_KEY='325d6fa364954d2e871c30ba95b553bd.KBdQdqgJgELJBhnv';
+var ZHIPU_API_URL='https://open.bigmodel.cn/api/paas/v4/chat/completions';
 function buildAIRequestData(r){
   r=r||{};
   var typeStats={
@@ -514,17 +517,55 @@ function buildAIRequestData(r){
   var wrongSamples=(r.wi||[]).slice(0,8).map(function(w){return {category:w.category||'综合',q:w.q};});
   return {score:r.score,total:r.total,correct:correct,typeStats:typeStats,catStats:catStats,wrongSamples:wrongSamples};
 }
-function aiEndpoint(){return '/.netlify/functions/ai-analysis';}
+function buildAIPrompt(data){
+  var score=data.score,total=data.total,correct=data.correct,ts=data.typeStats||{},cats=data.catStats||[],wrongs=data.wrongSamples||[];
+  var typeLines=[
+    '  - 单选题：'+(ts.sc1||0)+'/'+(ts.st1||0)+'（正确率 '+(ts.s1Rate||0)+'%）',
+    '  - 多选题：'+(ts.sc2||0)+'/'+(ts.st2||0)+'（正确率 '+(ts.s2Rate||0)+'%）',
+    '  - 判断题：'+(ts.sc3||0)+'/'+(ts.st3||0)+'（正确率 '+(ts.s3Rate||0)+'%）'
+  ].join('\n');
+  var catLines=cats.length?cats.map(function(c){return '  - '+c.name+'：'+c.correct+'/'+c.total+'（正确率 '+c.pct+'%）';}).join('\n'):'  - 无分类统计数据';
+  var wrongLines=wrongs.length?wrongs.map(function(w,i){return (i+1)+'. ['+(w.category||'综合')+'] '+w.q;}).join('\n'):'  - 无错题（本次全部答对）';
+  return [
+    '你是证券业风控合规考试的资深培训专家。请根据以下考生本次模拟考试的数据，给出专业的考情分析与下一步学习建议。',
+    '',
+    '【考试数据】',
+    '- 总分：'+score+' 分（满分100分，60分及格）',
+    '- 答对：'+correct+' / '+total+' 题',
+    '- 各题型正确率：',
+    typeLines,
+    '- 各知识模块正确率（已按正确率从低到高排序）：',
+    catLines,
+    '- 部分错题示例：',
+    wrongLines,
+    '',
+    '【输出要求】',
+    '请严格按以下 Markdown 格式输出，使用中文，共四个部分，每部分都要具体、可执行，结合证券合规实务，避免空话套话：',
+    '',
+    '### 考情总评',
+    '用2-4句话点评整体表现：是否及格、整体水平、最突出的优缺点。',
+    '',
+    '### 薄弱环节分析',
+    '针对正确率最低的2-3个知识模块，逐个分析失分原因（结合证券合规实务与法规要点），每个模块2-3句话。',
+    '',
+    '### 个性化学习建议',
+    '给出3-5条针对性学习建议，每条以 "1. "、"2. " 编号开头，包含"建议做什么 + 为什么"，涵盖法规记忆、实务理解、易错点辨析等。',
+    '',
+    '### 下一步学习计划',
+    '给出未来1-2周的学习计划，按"第1天/第2天…"或"每日"形式，具体到每天练习题量与复习模块。'
+  ].join('\n');
+}
 function loadAIAnalysis(){
   var box=document.getElementById('aiAnalysisBody');
   if(!box)return;
   if(!state.examResult){return;}
   box.innerHTML='<div class="ai-loading"><div class="ai-spinner"></div><span>AI 正在分析您的考情，请稍候…</span></div>';
   var data=buildAIRequestData(state.examResult);
-  fetch(aiEndpoint(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
-    .then(function(r){return r.json();})
-    .then(function(r){if(r&&r.ok&&r.content){renderAIContent(r.content);}else{showAIError(r&&r.error?r.error:'未知错误');}})
-    .catch(function(e){showAIError('网络错误，无法连接 AI 分析服务');});
+  var prompt=buildAIPrompt(data);
+  fetch(ZHIPU_API_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ZHIPU_API_KEY},body:JSON.stringify({model:'glm-4.5-flash',messages:[{role:'user',content:prompt}],temperature:0.7,max_tokens:1800})})
+    .then(function(resp){if(!resp.ok){return resp.text().then(function(t){throw new Error('智谱API错误 '+resp.status+': '+t.slice(0,300));});}return resp.json();})
+    .then(function(r){var c=r&&r.choices&&r.choices[0]&&r.choices[0].message&&r.choices[0].message.content;if(c){renderAIContent(c);}else{showAIError('AI 返回内容为空');}})
+    .catch(function(e){showAIError(e&&e.message?e.message:'网络错误，无法连接 AI 服务');});
 }
 function showAIError(msg){
   var box=document.getElementById('aiAnalysisBody');
