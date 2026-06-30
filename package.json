@@ -1,0 +1,12 @@
+{
+  "name": "securities-compliance-exam-platform",
+  "version": "1.1.0",
+  "description": "证券业风控合规智能考试平台 - 含 AI 考情分析（智谱 GLM-4.5-Flash）",
+  "private": true,
+  "scripts": {
+    "start": "netlify dev"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

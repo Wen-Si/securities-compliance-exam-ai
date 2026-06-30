@@ -2,3 +2,8 @@ data/
 __pycache__/
 *.pyc
 .DS_Store
+node_modules/
+.netlify/
+.env
+.env.local
+*.log

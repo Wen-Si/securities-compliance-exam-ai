@@ -142,6 +142,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 .cat-bar .fill.weak{background:#e53e3e}
 .cat-bar .fill.mid{background:#c9a84c}
 .cat-bar .fill.strong{background:#38a169}
+
+/* AI 智能考情分析 */
+.ai-analysis{margin:20px 0;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;background:#fff;box-shadow:0 6px 20px rgba(26,54,93,0.10)}
+.ai-header{background:linear-gradient(135deg,#2a4a7f 0%,#1a365d 60%,#243b5c 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.ai-header h3{font-size:16px;font-weight:700;margin:0;flex:1;letter-spacing:.5px}
+.ai-badge{background:linear-gradient(135deg,#c9a84c,#e6c875);color:#1a365d;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;letter-spacing:1px}
+.ai-model-tag{font-size:11px;color:#c9a84c;background:rgba(201,168,76,0.12);padding:3px 10px;border-radius:12px;border:1px solid rgba(201,168,76,0.4)}
+.ai-body{padding:18px 20px;font-size:14px;line-height:1.8;color:#2d3748}
+.ai-loading{display:flex;flex-direction:column;align-items:center;gap:12px;color:#718096;justify-content:center;padding:24px 0}
+.ai-loading .ai-spinner{width:28px;height:28px;border:3px solid #e2e8f0;border-top-color:#c9a84c;border-radius:50%;animation:aispin .8s linear infinite}
+.ai-loading span{font-size:13px;color:#718096}
+@keyframes aispin{to{transform:rotate(360deg)}}
+.ai-section{margin-bottom:18px}
+.ai-section:last-child{margin-bottom:0}
+.ai-section-title{font-size:14px;font-weight:700;color:#1a365d;margin-bottom:8px;padding-left:10px;border-left:3px solid #c9a84c;display:flex;align-items:center;gap:6px}
+.ai-section-body{color:#4a5568;font-size:13px;line-height:1.85;padding-left:13px}
+.ai-section-body p{margin:0 0 8px}
+.ai-section-body ul,.ai-section-body ol{margin:4px 0 8px 20px;padding:0}
+.ai-section-body li{margin-bottom:5px}
+.ai-section-body strong{color:#1a365d}
+.ai-retry{margin-top:14px;text-align:center}
+.ai-regen-btn{background:#fff;border:1px solid #c9a84c;color:#975a16;padding:7px 18px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.ai-regen-btn:hover{background:#fefcf3;box-shadow:0 2px 8px rgba(201,168,76,0.2)}
+.ai-error{color:#e53e3e;font-size:13px;text-align:center;padding:14px;background:#fff5f5;border-radius:8px}
 </style>
 </head>
 <body>
@@ -335,7 +359,7 @@ function getAllSingle(){var all=[];for(var ci=0;ci<CATEGORY_NAMES.length;ci++){v
 function formatTime(s){var m=Math.floor(s/60),sec=s%60;return(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;}
 function escHtml(s){var d=document.createElement('div');d.appendChild(document.createTextNode(String(s)));return d.innerHTML;}
 function buildDots(eq,ea,fn){var h='<div style="margin-top:16px;text-align:center"><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center">';for(var i=0;i<eq.length;i++){var a=ea[i]!==undefined&&ea[i]!==null;h+='<span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:4px;font-size:11px;cursor:pointer;background:'+(a?'#c9a84c':'#edf2f7')+';color:'+(a?'#fff':'#718096')+'" onclick="'+fn+'('+i+')">'+(i+1)+'</span>';}return h+'</div></div>';}
-function render(){var app=document.getElementById('app');var hdr=document.querySelector('.header');var ftr=document.querySelector('.footer');if(state.page==='login'){if(hdr)hdr.style.display='none';if(ftr)ftr.style.display='none';}else{if(hdr)hdr.style.display='';if(ftr)ftr.style.display='';updateUserBar();}switch(state.page){case 'login':app.innerHTML=renderLogin();break;case 'home':app.innerHTML=renderHome();break;case 'exam':app.innerHTML=renderExam();break;case 'examResult':app.innerHTML=renderExamResult();break;case 'practiceSetup':app.innerHTML=renderPracticeSetup();break;case 'practice':app.innerHTML=renderPractice();break;case 'wrongBook':app.innerHTML=renderWrongBook();break;case 'wrongPractice':app.innerHTML=renderWrongPractice();break;case 'history':app.innerHTML=renderHistory();break;case 'benefits':app.innerHTML=renderBenefits();setTimeout(drawBenefitsChart,50);break;}}
+function render(){var app=document.getElementById('app');var hdr=document.querySelector('.header');var ftr=document.querySelector('.footer');if(state.page==='login'){if(hdr)hdr.style.display='none';if(ftr)ftr.style.display='none';}else{if(hdr)hdr.style.display='';if(ftr)ftr.style.display='';updateUserBar();}switch(state.page){case 'login':app.innerHTML=renderLogin();break;case 'home':app.innerHTML=renderHome();break;case 'exam':app.innerHTML=renderExam();break;case 'examResult':app.innerHTML=renderExamResult();setTimeout(loadAIAnalysis,60);break;case 'practiceSetup':app.innerHTML=renderPracticeSetup();break;case 'practice':app.innerHTML=renderPractice();break;case 'wrongBook':app.innerHTML=renderWrongBook();break;case 'wrongPractice':app.innerHTML=renderWrongPractice();break;case 'history':app.innerHTML=renderHistory();break;case 'benefits':app.innerHTML=renderBenefits();setTimeout(drawBenefitsChart,50);break;}}
 function goPage(p){if(!currentUser&&p!=='login'){p='login';}state.page=p;render();window.scrollTo(0,0);}
 function renderHome(){var t=getAllSingle().length+MULTI_QUESTIONS.length+JUDGE_QUESTIONS.length;var remain=getRemainingPoints();return '<div class="card" style="background:linear-gradient(135deg,#1a365d,#2a4a7f);color:#fff;margin-bottom:16px"><div style="text-align:center;padding:16px"><div style="font-size:13px;color:#c9a84c;margin-bottom:4px">今日剩余积分</div><div style="font-size:48px;font-weight:700;color:#fff;line-height:1">'+remain+'</div><div style="font-size:12px;color:#a0aec0;margin-top:8px">每题消耗1积分 · 每日0点重置</div></div></div>'+'<div class="card"><h2>\uD83D\uDCCB 考试模式</h2><div class="mode-grid"><div class="mode-card" onclick="startExam()"><div class="icon">\uD83D\uDCDD</div><h3>模拟考试</h3><p>随机组卷40题 \u00B7 60分钟</p></div><div class="mode-card" onclick="goPage(\'practiceSetup\')"><div class="icon">\uD83D\uDCDA</div><h3>专项练习</h3><p>16个分类 \u00B7 自由选择</p></div></div></div><div class="card"><h2>\uD83D\uDCCA 学习工具</h2><div class="mode-grid"><div class="mode-card" onclick="goPage(\'wrongBook\')"><div class="icon">\u274C</div><h3>错题本</h3><p>'+state.wrongBook.length+' 道错题</p></div><div class="mode-card" onclick="goPage(\'history\')"><div class="icon">\uD83D\uDCC8</div><h3>成绩记录</h3><p>'+state.history.length+' 次记录</p></div><div class="mode-card" onclick="goPage(\'benefits\')"><div class="icon">\uD83D\uDCAF</div><h3>权益看板</h3><p>剩余 '+getBenefitsPct()+' %</p></div></div></div><div class="card" style="text-align:center;color:#a0aec0;font-size:13px">题库共计10000题（单选5000题 \u00B7 多选2500题 \u00B7 判断2500题）</div>';}
 function startExam(){var as=shuffle(getAllSingle()).slice(0,20),am=shuffle(MULTI_QUESTIONS.slice()).slice(0,10),aj=shuffle(JUDGE_QUESTIONS.slice()).slice(0,10);state.examQuestions=[];for(var i=0;i<as.length;i++)state.examQuestions.push(Object.assign({},as[i],{qtype:'single'}));for(var i=0;i<am.length;i++)state.examQuestions.push(Object.assign({},am[i],{qtype:'multi'}));for(var i=0;i<aj.length;i++)state.examQuestions.push(Object.assign({},aj[i],{qtype:'judge'}));state.examIndex=0;state.examAnswers={};state.examTimeLeft=3600;if(state.examTimer)clearInterval(state.examTimer);;state.examTimer=setInterval(function(){state.examTimeLeft--;var el=document.getElementById('examTimer');if(el){el.textContent=formatTime(state.examTimeLeft);if(state.examTimeLeft<=300)el.className='timer warning';}if(state.examTimeLeft<=0){clearInterval(state.examTimer);submitExam();}},1000);goPage('exam');}
@@ -448,7 +472,7 @@ function reviewWrongByCat(cat){
   state.practiceIndex=0;state.practiceAnswered={};
   goPage('wrongPractice');
 }
-function renderExamResult(){var r=state.examResult,pc=r.score>=60?'pass':'fail',pt=r.score>=60?'恭喜通过！':'未通过，继续加油！',ct=r.sc1+r.sc2+r.sc3,rt=Math.round(ct/r.total*100),wh='';if(r.wi.length>0){wh='<div style="margin-top:16px"><h3 style="font-size:14px;color:#e53e3e;margin-bottom:10px">\u274C 错题解析（'+r.wi.length+'题）</h3>';for(var i=0;i<r.wi.length;i++){var w=r.wi[i],ca='';if(w.qtype==='single')ca=String.fromCharCode(65+w.a);else if(w.qtype==='multi'){for(var j=0;j<w.a.length;j++)ca+=String.fromCharCode(65+w.a[j]);}else ca=w.a?'\u6b63\u786e':'\u9519\u8bef';wh+='<div style="margin-bottom:12px;padding:10px;background:#fff5f5;border-radius:8px;font-size:13px"><div style="font-weight:600;color:#1a365d">'+(i+1)+'. '+escHtml(w.q)+'</div><div style="color:#38a169;margin-top:4px">\u2705 \u6b63\u786e\u7b54\u6848\uff1a'+escHtml(ca)+'</div><div style="color:#744210;margin-top:4px">\uD83D\uDCD6 '+escHtml(w.e)+'</div></div>';}wh+='</div>';}var planH=buildImprovementPlan(r);return '<div class="card"><div class="score-panel"><div class="label">\u8003\u8bd5\u6210\u7ee9</div><div class="score '+pc+'">'+r.score+'</div><div class="label '+pc+'">'+pt+'</div></div><div class="score-detail"><div class="item"><div class="val">'+r.sc1+'/'+r.st1+'</div><div class="lbl">\u5355\u9009\u9898</div></div><div class="item"><div class="val">'+r.sc2+'/'+r.st2+'</div><div class="lbl">\u591a\u9009\u9898</div></div><div class="item"><div class="val">'+r.sc3+'/'+r.st3+'</div><div class="lbl">\u5224\u65ad\u9898</div></div></div><div style="text-align:center;font-size:13px;color:#718096;margin-bottom:16px">\u7b54\u5bf9 '+ct+' / '+r.total+' \u9898 \u00B7 \u6b63\u786e\u7387 '+rt+'%</div>'+wh+planH+'<div class="actions"><button class="btn btn-primary" onclick="startExam()">\u518d\u8003\u4e00\u6b21</button><button class="btn btn-outline" onclick="goPage(\'home\')">\u8fd4\u56de\u9996\u9875</button></div></div>';}
+function renderExamResult(){var r=state.examResult,pc=r.score>=60?'pass':'fail',pt=r.score>=60?'恭喜通过！':'未通过，继续加油！',ct=r.sc1+r.sc2+r.sc3,rt=Math.round(ct/r.total*100),wh='';if(r.wi.length>0){wh='<div style="margin-top:16px"><h3 style="font-size:14px;color:#e53e3e;margin-bottom:10px">\u274C 错题解析（'+r.wi.length+'题）</h3>';for(var i=0;i<r.wi.length;i++){var w=r.wi[i],ca='';if(w.qtype==='single')ca=String.fromCharCode(65+w.a);else if(w.qtype==='multi'){for(var j=0;j<w.a.length;j++)ca+=String.fromCharCode(65+w.a[j]);}else ca=w.a?'\u6b63\u786e':'\u9519\u8bef';wh+='<div style="margin-bottom:12px;padding:10px;background:#fff5f5;border-radius:8px;font-size:13px"><div style="font-weight:600;color:#1a365d">'+(i+1)+'. '+escHtml(w.q)+'</div><div style="color:#38a169;margin-top:4px">\u2705 \u6b63\u786e\u7b54\u6848\uff1a'+escHtml(ca)+'</div><div style="color:#744210;margin-top:4px">\uD83D\uDCD6 '+escHtml(w.e)+'</div></div>';}wh+='</div>';}var planH=buildImprovementPlan(r);var aiBox='<div class="ai-analysis" id="aiAnalysisBox"><div class="ai-header"><span class="ai-badge">AI</span><h3>AI 智能考情分析</h3><span class="ai-model-tag">智谱 GLM-4.5-Flash</span></div><div class="ai-body" id="aiAnalysisBody"><div class="ai-loading"><div class="ai-spinner"></div><span>AI 正在分析您的考情，请稍候…</span></div></div></div>';return '<div class="card"><div class="score-panel"><div class="label">\u8003\u8bd5\u6210\u7ee9</div><div class="score '+pc+'">'+r.score+'</div><div class="label '+pc+'">'+pt+'</div></div><div class="score-detail"><div class="item"><div class="val">'+r.sc1+'/'+r.st1+'</div><div class="lbl">\u5355\u9009\u9898</div></div><div class="item"><div class="val">'+r.sc2+'/'+r.st2+'</div><div class="lbl">\u591a\u9009\u9898</div></div><div class="item"><div class="val">'+r.sc3+'/'+r.st3+'</div><div class="lbl">\u5224\u65ad\u9898</div></div></div><div style="text-align:center;font-size:13px;color:#718096;margin-bottom:16px">\u7b54\u5bf9 '+ct+' / '+r.total+' \u9898 \u00B7 \u6b63\u786e\u7387 '+rt+'%</div>'+aiBox+wh+planH+'<div class="actions"><button class="btn btn-primary" onclick="startExam()">\u518d\u8003\u4e00\u6b21</button><button class="btn btn-outline" onclick="goPage(\'home\')">\u8fd4\u56de\u9996\u9875</button></div></div>';}
 function renderPracticeSetup(){var ch='<div class="cat-item '+(state.practiceCat===''?'active':'')+'" onclick="selectCat(\'all\')">全部</div>';for(var i=0;i<CATEGORY_NAMES.length;i++){var c=CATEGORY_NAMES[i],cls=state.practiceCat===c?'active':'';ch+='<div class="cat-item '+cls+'" onclick="selectCat(\''+c+'\')">'+c+'</div>';}var types=[['all','全部'],['single','单选题'],['multi','多选题'],['judge','判断题']],th='';for(var i=0;i<types.length;i++){var cls=state.practiceType===types[i][0]?'active':'';th+='<div class="type-btn '+cls+'" onclick="selectType(\''+types[i][0]+'\')">'+types[i][1]+'</div>';}return '<div class="card"><div class="nav-bar"><span class="back-link" onclick="goPage(\'home\')">\u2190 返回</span><span></span></div><h2>\uD83D\uDCDA 专项练习</h2><p style="font-size:13px;color:#718096;margin-bottom:16px">选择分类和题型，开始专项练习</p><h3 style="font-size:14px;color:#1a365d;margin-bottom:10px">选择分类</h3><div class="cat-grid">'+ch+'</div><h3 style="font-size:14px;color:#1a365d;margin-bottom:10px">选择题型</h3><div class="type-btns">'+th+'</div><button class="btn btn-gold btn-block" onclick="startPractice()">开始练习</button></div>';}
 function selectCat(c){state.practiceCat=c;render();}
 function selectType(t){state.practiceType=t;render();}
@@ -475,6 +499,79 @@ function clearHistory(){if(confirm('确定要清空成绩记录吗？')){state.h
 render();
 
 
+// ===== AI 智能考情分析（智谱 GLM-4.5-Flash，通过 Netlify Function 调用，Key 不暴露到前端） =====
+function buildAIRequestData(r){
+  r=r||{};
+  var typeStats={
+    sc1:r.sc1||0,st1:r.st1||0,s1Rate:r.st1>0?Math.round((r.sc1||0)/r.st1*100):100,
+    sc2:r.sc2||0,st2:r.st2||0,s2Rate:r.st2>0?Math.round((r.sc2||0)/r.st2*100):100,
+    sc3:r.sc3||0,st3:r.st3||0,s3Rate:r.st3>0?Math.round((r.sc3||0)/r.st3*100):100
+  };
+  var catStats=[],cs=r.catStats||{};
+  for(var cat in cs){var s=cs[cat];var pct=s.total>0?Math.round(s.correct/s.total*100):100;catStats.push({name:cat,correct:s.correct,total:s.total,pct:pct});}
+  catStats.sort(function(a,b){return a.pct-b.pct;});
+  var correct=(r.sc1||0)+(r.sc2||0)+(r.sc3||0);
+  var wrongSamples=(r.wi||[]).slice(0,8).map(function(w){return {category:w.category||'综合',q:w.q};});
+  return {score:r.score,total:r.total,correct:correct,typeStats:typeStats,catStats:catStats,wrongSamples:wrongSamples};
+}
+function aiEndpoint(){return '/.netlify/functions/ai-analysis';}
+function loadAIAnalysis(){
+  var box=document.getElementById('aiAnalysisBody');
+  if(!box)return;
+  if(!state.examResult){return;}
+  box.innerHTML='<div class="ai-loading"><div class="ai-spinner"></div><span>AI 正在分析您的考情，请稍候…</span></div>';
+  var data=buildAIRequestData(state.examResult);
+  fetch(aiEndpoint(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+    .then(function(r){return r.json();})
+    .then(function(r){if(r&&r.ok&&r.content){renderAIContent(r.content);}else{showAIError(r&&r.error?r.error:'未知错误');}})
+    .catch(function(e){showAIError('网络错误，无法连接 AI 分析服务');});
+}
+function showAIError(msg){
+  var box=document.getElementById('aiAnalysisBody');
+  if(!box)return;
+  box.innerHTML='<div class="ai-error">AI 分析失败：'+escHtml(msg)+'</div><div class="ai-retry"><button class="ai-regen-btn" onclick="loadAIAnalysis()">重新生成分析</button></div>';
+}
+function applyAIBold(s){return s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+function formatAILines(text){
+  var lines=text.split('\n'),out='',inUl=false,inOl=false;
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i];
+    var ulMatch=line.match(/^\s*[-*]\s+(.*)$/);
+    var olMatch=line.match(/^\s*\d+[.、)]\s+(.*)$/);
+    if(ulMatch){if(inOl){out+='</ol>';inOl=false;}if(!inUl){out+='<ul>';inUl=true;}out+='<li>'+applyAIBold(ulMatch[1])+'</li>';}
+    else if(olMatch){if(inUl){out+='</ul>';inUl=false;}if(!inOl){out+='<ol>';inOl=true;}out+='<li>'+applyAIBold(olMatch[1])+'</li>';}
+    else if(line.trim()===''){
+      var j=i+1;while(j<lines.length&&lines[j].trim()==='')j++;
+      var nextIsList=j<lines.length&&(lines[j].match(/^\s*[-*]\s+/)||lines[j].match(/^\s*\d+[.、)]\s+/));
+      if(!nextIsList){if(inUl){out+='</ul>';inUl=false;}if(inOl){out+='</ol>';inOl=false;}}
+    }
+    else{if(inUl){out+='</ul>';inUl=false;}if(inOl){out+='</ol>';inOl=false;}out+='<p>'+applyAIBold(line)+'</p>';}
+  }
+  if(inUl)out+='</ul>';if(inOl)out+='</ol>';
+  return out;
+}
+function renderAIMarkdown(md){
+  var escaped=escHtml(md);
+  var headerRe=/^###\s+(.+)$/gm,headers=[],m;
+  while((m=headerRe.exec(escaped))!==null){headers.push({title:m[1],start:m.index,end:headerRe.lastIndex});}
+  var html='';
+  if(headers.length===0){return '<div class="ai-section-body">'+formatAILines(escaped)+'</div>';}
+  var pre=escaped.substring(0,headers[0].start).trim();
+  if(pre){html+='<div class="ai-section-body">'+formatAILines(pre)+'</div>';}
+  for(var i=0;i<headers.length;i++){
+    var bodyEnd=i+1<headers.length?headers[i+1].start:escaped.length;
+    var body=escaped.substring(headers[i].end,bodyEnd).trim();
+    html+='<div class="ai-section"><div class="ai-section-title">'+headers[i].title+'</div><div class="ai-section-body">'+formatAILines(body)+'</div></div>';
+  }
+  return html;
+}
+function renderAIContent(content){
+  var box=document.getElementById('aiAnalysisBody');
+  if(!box)return;
+  var html=renderAIMarkdown(content);
+  html+='<div class="ai-retry"><button class="ai-regen-btn" onclick="loadAIAnalysis()">重新生成分析</button></div>';
+  box.innerHTML=html;
+}
 function renderBenefits(){
   var pct=getBenefitsPct();
   var total=state.benefits.total;
