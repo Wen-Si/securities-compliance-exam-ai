@@ -114,6 +114,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hira
 .tab-switch{display:flex;margin-bottom:20px;border-radius:8px;overflow:hidden;border:2px solid #e2e8f0}
 .tab-switch .tab{flex:1;padding:10px;text-align:center;cursor:pointer;font-size:14px;font-weight:600;transition:all .15s;background:#f7fafc;color:#718096}
 .tab-switch .tab.active{background:#1a365d;color:#fff}
+.user-bar .switch-btn{cursor:pointer;color:#c9a84c;text-decoration:underline;font-size:12px;margin-left:4px}
+.user-bar .switch-btn:hover{color:#1a365d}
+.user-chip-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;justify-content:center}
+.user-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px 6px 6px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:20px;cursor:pointer;font-size:12px;color:#1a365d;transition:all .15s}
+.user-chip:hover{border-color:#c9a84c;background:#fff}
+.user-chip .chip-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#c9a84c,#d4b65c);color:#1a365d;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.user-chip .chip-del{color:#cbd5e0;cursor:pointer;font-size:14px;line-height:1;padding:0 2px;border-radius:50%}
+.user-chip .chip-del:hover{color:#e53e3e}
+.user-chip.active{background:#1a365d;color:#fff;border-color:#1a365d}
+.user-chip.active .chip-avatar{background:#fff;color:#1a365d}
+.user-list-divider{margin:18px 0 8px;border-top:1px solid #e2e8f0;padding-top:12px;font-size:12px;color:#a0aec0;text-align:center}
 
 /* 个性化提升方案 */
 .plan-section{margin-top:20px;padding-top:16px;border-top:2px solid #c9a84c}
@@ -339,12 +350,36 @@ function doLogout(){
   updateUserBar();
   goPage('login');
 }
+function switchUser(){
+  if(state.examTimer)clearInterval(state.examTimer);
+  currentUser='';cloudUser='';
+  localStorage.removeItem('currentUser');
+  state.wrongBook=[];state.history=[];state.benefits={total:100,used:0};state.benefitsHistory=[];
+  updateUserBar();
+  state.loginTab='login';
+  goPage('login');
+}
+function deleteLocalUser(un){
+  if(!un)return;
+  if(!confirm('确定要删除本地账号 "'+un+'" 吗？该账号的错题本、成绩、权益记录将被清除，且不可恢复。'))return;
+  var users=getUsers();
+  var filtered=[];
+  for(var i=0;i<users.length;i++){if(users[i].u!==un){filtered.push(users[i]);}}
+  saveUsers(filtered);
+  localStorage.removeItem('wrongBook_'+un);
+  localStorage.removeItem('examHistory_'+un);
+  localStorage.removeItem('benefits_'+un);
+  localStorage.removeItem('benefitsHistory_'+un);
+  localStorage.removeItem('lastBenefitsRecover_'+un);
+  if(currentUser===un){switchUser();}
+  else{render();}
+}
 function updateUserBar(){
   var bar=document.getElementById('userBar');
   if(!bar)return;
   if(currentUser){
     bar.style.display='flex';
-    bar.innerHTML='<div class="user-avatar">'+escHtml(currentUser.charAt(0).toUpperCase())+'</div><span>'+escHtml(currentUser)+'</span><span class="logout-btn" onclick="doLogout()">退出</span>';
+    bar.innerHTML='<div class="user-avatar">'+escHtml(currentUser.charAt(0).toUpperCase())+'</div><span>'+escHtml(currentUser)+'</span><span class="switch-btn" onclick="switchUser()" title="切换到其他账号">切换</span><span class="logout-btn" onclick="doLogout()">退出</span>';
   }else{
     bar.style.display='none';
   }
@@ -731,6 +766,19 @@ function renderLogin(){
   var btnText=isLogin?'登 录':'注 册';
   var btnAction=isLogin?'doLogin()':'doRegister()';
   var switchHint=isLogin?'还没有账号？<span style="color:#1a365d;cursor:pointer;text-decoration:underline" onclick="switchLoginTab(\'register\')">立即注册</span>':'已有账号？<span style="color:#1a365d;cursor:pointer;text-decoration:underline" onclick="switchLoginTab(\'login\')">去登录</span>';
+  var usersHtml='';
+  if(isLogin){
+    var users=getUsers();
+    if(users.length){
+      var chips='';
+      for(var i=0;i<users.length;i++){
+        var un=users[i].u;
+        var avatar=escHtml(un.charAt(0).toUpperCase());
+        chips+='<span class="user-chip" onclick="quickFillUser(\''+escHtml(un).replace(/'/g,'\\\'')+'\')"><span class="chip-avatar">'+avatar+'</span><span>'+escHtml(un)+'</span><span class="chip-del" onclick="event.stopPropagation();deleteLocalUser(\''+escHtml(un).replace(/'/g,'\\\'')+'\')" title="删除账号">×</span></span>';
+      }
+      usersHtml='<div class="user-list-divider">已有账号（点击快速填入用户名，仍需输入密码）</div><div class="user-chip-list">'+chips+'</div>';
+    }
+  }
   return '<div class="login-container"><div class="login-card">'
     +'<div style="font-size:48px;margin-bottom:12px">\uD83C\uDFDB\uFE0F</div>'
     +'<h2>证券业风控合规智能考试平台</h2>'
@@ -741,8 +789,15 @@ function renderLogin(){
     +'<div class="login-error" id="loginError"></div>'
     +'<button class="btn btn-primary btn-block" onclick="'+btnAction+'" style="font-size:16px;padding:14px">'+btnText+'</button>'
     +'<div style="margin-top:16px;font-size:13px;color:#a0aec0">'+switchHint+'</div>'
-    +'<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#a0aec0;text-align:center">风控博士沙龙版权所有</div>'
+    +usersHtml
+    +'<div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#a0aec0;text-align:center">风控博士沙龙版权所有 \u00B7 多用户本地隔离存储</div>'
     +'</div></div>';
+}
+function quickFillUser(un){
+  var el=document.getElementById('loginUser');
+  if(el){el.value=un;el.focus();}
+  var pwdEl=document.getElementById('loginPwd');
+  if(pwdEl){pwdEl.focus();}
 }
 
 render();
